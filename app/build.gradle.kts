@@ -29,6 +29,8 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+
+
 }
 
 dependencies {
@@ -40,4 +42,7 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
+
+    //nav
+    implementation ("com.github.ismaeldivita:chip-navigation-bar:1.4.0")
 }
