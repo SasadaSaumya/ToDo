@@ -26,6 +26,7 @@ public class LauncherActivity extends AppCompatActivity {
             return insets;
         });
 
+
         Animation animation = AnimationUtils.loadAnimation(this,R.anim.splash_anim);
         ImageView imageView = findViewById(R.id.splashImageView);
         imageView.startAnimation(animation);
@@ -40,9 +41,10 @@ public class LauncherActivity extends AppCompatActivity {
             @Override
             public void onAnimationEnd(Animation animation) {
                 Intent intent = new Intent(LauncherActivity.this, MainActivity.class);
-                finish();
+
                 Log.i("Sasa","onAnimationEnd");
                 startActivity(intent);
+                finish();
             }
 
             @Override
