@@ -5,6 +5,9 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
@@ -22,6 +25,8 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.sasadev.todo.adapter.TodoItemAdapter;
 import com.sasadev.todo.models.TodoItem;
 import com.sasadev.todo.models.User;
+import com.sasadev.todo.utils.AuthUtils;
+import com.shashank.sony.fancytoastlib.FancyToast;
 
 import java.util.ArrayList;
 
@@ -31,7 +36,10 @@ import io.realm.RealmResults;
 
 public class MainActivity extends AppCompatActivity {
 
-    private ArrayList<TodoItem> todoItems;
+    private ArrayList<TodoItem> todoItems ;
+    private User loginUser;
+    String username;
+    Realm realm;
 
 
     @Override
@@ -45,28 +53,100 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
 
+         realm = Realm.getDefaultInstance();
+
         SharedPreferences sharedPreferences = getSharedPreferences("user",0);
-        String username =     sharedPreferences.getString("username",null);
+        username =     sharedPreferences.getString("username",null);
+        loginUser = realm.where(User.class).equalTo("username", username).findFirst();
 
         TextView textView = findViewById(R.id.welcomeTextView);
-        textView.setText(R.string.welcomeText + username+"!");
+        textView.setText("Hi Welcome " + username+"!");
 
-        //get all users data from realm
+        loadUserTodoList();
+
+        FloatingActionButton floatingActionButton = findViewById(R.id.floatingActionButton);
+        floatingActionButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                View dialogView = getLayoutInflater().inflate(R.layout.add_item_dialog,null);
+                builder.setView(dialogView);
+
+                AlertDialog dialog = builder.create();
+                dialog.show();
+
+                TextView cancelButton = dialogView.findViewById(R.id.cancelButton);
+                cancelButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        dialog.dismiss();
+                        }
+                });
+
+                Button button = dialogView.findViewById(R.id.addButton);
+                button.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+
+                        EditText titleEditTextView = dialogView.findViewById(R.id.toDoTitleEditText);
+                        EditText descriptionEditTextView = dialogView.findViewById(R.id.toDoDescriptionEditText);
+                        EditText tagTexEdittView = dialogView.findViewById(R.id.toDoTagEditText);
+
+                        realm.executeTransaction(new Realm.Transaction() {
+                            @Override
+                            public void execute(Realm realm) {
+                                TodoItem newTodoItem = realm.createObject(TodoItem.class);
+                                newTodoItem.setId(todoItems.size());
+                                newTodoItem.setTitle(titleEditTextView.getText().toString());
+                                newTodoItem.setDescription(descriptionEditTextView.getText().toString());
+                                newTodoItem.setDate(tagTexEdittView.getText().toString());
+                                newTodoItem.setTag(tagTexEdittView.getText().toString());
+                                newTodoItem.setStatus(false);
+
+                                loginUser.getTodoItems().add(newTodoItem);
+                                dialog.dismiss();
+                                FancyToast.makeText(MainActivity.this,"Task Added Successful!",FancyToast.LENGTH_LONG,FancyToast.SUCCESS,false).show();
+                            }
+                        });
+
+                        loadUserTodoList();
+
+                    }
+                });
 
 
-        todoItems = new ArrayList<>();
 
-        todoItems.add(new TodoItem("Gym","test","43234",true,"work"));
-        todoItems.add(new TodoItem("Gym","test","43234",true,"work"));
-        todoItems.add(new TodoItem("Gym","test","43234",false,"work"));
-        todoItems.add(new TodoItem("Gym","test","43234",false,"work"));
-        todoItems.add(new TodoItem("Gym","test","43234",false,"work"));
-        todoItems.add(new TodoItem("Gym","test","43234",false,"work"));
-        todoItems.add(new TodoItem("Gym","test","43234",false,"work"));
-        todoItems.add(new TodoItem("Gym","test","43234",false,"work"));
-        todoItems.add(new TodoItem("Gym","test","43234",false,"work"));
-        todoItems.add(new TodoItem("Gym","test","43234",false,"work"));
+            }
+        });
 
+        TextView logoutText = findViewById(R.id.logoutText);
+        logoutText.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                AuthUtils.signOut(MainActivity.this);
+                finish();
+            }
+        });
+
+
+    }
+
+    private void loadUserTodoList(){
+
+        if(loginUser == null){
+            todoItems = new ArrayList<>();
+        }else{
+            todoItems = new ArrayList<>(
+                    realm.copyFromRealm(loginUser.getTodoItems()));
+
+        }
+
+        if(todoItems.isEmpty()){
+            LinearLayout linearLayout = findViewById(R.id.emptyStateLayout);
+            linearLayout.setVisibility(View.VISIBLE);
+            return;
+        }
 
         RecyclerView recyclerView = findViewById(R.id.toDoItemRecyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -89,24 +169,26 @@ public class MainActivity extends AppCompatActivity {
         ItemTouchHelper itemTouchHelper = new ItemTouchHelper(simpleCallback);
         itemTouchHelper.attachToRecyclerView(recyclerView);
 
+        // Open a Realm instance
+        Realm.init(MainActivity.this);
+        Realm realm = Realm.getDefaultInstance();
 
-        FloatingActionButton floatingActionButton = findViewById(R.id.floatingActionButton);
-        floatingActionButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
+        try {
+            // Query all User objects
+            RealmResults<User> realmResults = realm.where(User.class).findAll();
 
-                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-                View dialogView = getLayoutInflater().inflate(R.layout.add_item_dialog,null);
-                builder.setView(dialogView);
-
-                AlertDialog dialog = builder.create();
-                dialog.show();
-
-
+            // Log usernames
+            for (User user : realmResults) {
+                Log.i("Sasa", "Username: " + user.getUsername());
             }
-        });
+        } finally {
+            // Always close Realm in finally block to prevent memory leaks
+            realm.close();
+        }
 
+    }
 
+    private void addTodoItem(TodoItem todoItem){
 
     }
 

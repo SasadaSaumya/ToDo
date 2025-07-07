@@ -1,5 +1,6 @@
 package com.sasadev.todo.models;
 
+import io.realm.RealmList;
 import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
 
@@ -10,6 +11,16 @@ public class User extends RealmObject {
 
     private byte[] password;
     private String mobile;
+    private byte[] salt;
+    private RealmList<TodoItem> todoItems = new RealmList<>();
+
+    public RealmList<TodoItem> getTodoItems() {
+        return todoItems;
+    }
+
+    public void setTodoItems(RealmList<TodoItem> todoItems) {
+        this.todoItems = todoItems;
+    }
 
     public String getUsername() {
         return username;
@@ -43,7 +54,7 @@ public class User extends RealmObject {
         this.salt = salt;
     }
 
-    private byte[] salt;
+
 
 
 

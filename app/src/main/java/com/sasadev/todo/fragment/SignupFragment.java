@@ -1,5 +1,6 @@
 package com.sasadev.todo.fragment;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -115,29 +116,30 @@ public class SignupFragment extends Fragment {
                                 user.setPassword(hashedPassword);
                                 user.setMobile(mobileText);
                                 user.setSalt(salt);
+
                             }
                         });
+
 
                         FancyToast.makeText(inflateView.getContext(),"Sign Up Successful",FancyToast.LENGTH_LONG,FancyToast.SUCCESS,false).show();
 
                         //save details locally
-                        SharedPreferences sharedPreferences = requireActivity().getSharedPreferences("user",0);
+                        SharedPreferences sharedPreferences = requireActivity().getSharedPreferences("user", Context.MODE_PRIVATE);
                         SharedPreferences.Editor editor = sharedPreferences.edit();
                         editor.putString("username",usernameText);
                         editor.putString("mobile",mobileText);
                         editor.apply();
 
-                    } catch (Exception e) {
-                        FancyToast.makeText(inflateView.getContext(),"Something went wrong!",FancyToast.LENGTH_LONG,FancyToast.ERROR,false).show();
-                        throw new RuntimeException(e);
-                    }finally {
                         realm.close();
 
                         Intent intent = new Intent(inflateView.getContext(), MainActivity.class);
                         startActivity(intent);
                         requireActivity().finish();
-                    }
 
+                    } catch (Exception e) {
+                        FancyToast.makeText(inflateView.getContext(),"Something went wrong!",FancyToast.LENGTH_LONG,FancyToast.ERROR,false).show();
+                        throw new RuntimeException(e);
+                    }
 
 
                 }

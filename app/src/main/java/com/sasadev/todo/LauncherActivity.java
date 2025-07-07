@@ -13,6 +13,8 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.sasadev.todo.utils.AuthUtils;
+
 import io.realm.Realm;
 import io.realm.RealmConfiguration;
 
@@ -47,7 +49,9 @@ public class LauncherActivity extends AppCompatActivity {
 
             @Override
             public void onAnimationEnd(Animation animation) {
-                Intent intent = new Intent(LauncherActivity.this, AuthActivity.class);
+                Intent intent = new Intent(LauncherActivity.this,
+                        AuthUtils.isUserSignedIn(LauncherActivity.this) ? MainActivity.class : AuthActivity.class
+                );
 
                 Log.i("Sasa","onAnimationEnd");
                 startActivity(intent);

@@ -25,6 +25,8 @@ public class AuthActivity extends AppCompatActivity {
             return insets;
         });
 
+        Realm.init(this);
+
         getSupportFragmentManager().beginTransaction().replace(R.id.authFrameLayout,new LoginFragment()).addToBackStack(null).commit();
 
     }

@@ -3,5 +3,11 @@
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="welcomeText">Hi Welcome </string>
+    <string name="welcome_des">Add your tasks and get things done.</string>
 
+    <string name="tag_text">Tag</string>
+    <string name="description_text">Description</string>
+    <string name="title_text">Title</string>"
+    <string name="add_to_do_item_text">Add Your To-Do Item</string>
+    <string name="select_your_date_text">Select Due Date</string>
 </resources>

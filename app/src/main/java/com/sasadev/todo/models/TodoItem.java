@@ -1,12 +1,28 @@
 package com.sasadev.todo.models;
 
-public class TodoItem {
+import io.realm.RealmObject;
+import io.realm.annotations.PrimaryKey;
 
+public class TodoItem extends RealmObject {
+
+    @PrimaryKey
+    int id;
     String title;
     String description;
     String date;
     boolean status;
     String tag;
+
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+
 
     public String getTitle() {
         return title;

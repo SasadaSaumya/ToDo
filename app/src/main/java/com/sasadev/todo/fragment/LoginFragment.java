@@ -1,9 +1,13 @@
 package com.sasadev.todo.fragment;
 
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,9 +15,14 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.sasadev.todo.MainActivity;
 import com.sasadev.todo.R;
+import com.sasadev.todo.models.User;
 import com.sasadev.todo.utils.InputValidator;
+import com.sasadev.todo.utils.PasswordUtils;
 import com.shashank.sony.fancytoastlib.FancyToast;
+
+import io.realm.Realm;
 
 
 public class LoginFragment extends Fragment {
@@ -85,7 +94,46 @@ public class LoginFragment extends Fragment {
                     return;
                 }else{
 
-                    FancyToast.makeText(inflateView.getContext(),"Sign In Successful",FancyToast.LENGTH_LONG,FancyToast.SUCCESS,false).show();
+                    Realm realm = Realm.getDefaultInstance();
+                    User user = realm.where(User.class).equalTo("username",usernameText).findFirst();
+
+
+                    Log.i("sasa",user.getUsername() + " " + user.getPassword() + " " + user.getSalt() + " " + user.getMobile());
+
+                    if(user.getPassword() == null || user.getSalt() == null ){
+                        FancyToast.makeText(inflateView.getContext(), "User not found. Please sign up.", FancyToast.LENGTH_LONG, FancyToast.ERROR, false).show();
+                        realm.close();
+                        return;
+                    }
+
+                    if(user == null){
+                        FancyToast.makeText(inflateView.getContext(), "User not found. Please sign up.", FancyToast.LENGTH_LONG, FancyToast.ERROR, false).show();
+                        realm.close();
+                        return;
+                    }
+
+                    //password check
+                    boolean isPasswordCorrect = PasswordUtils.verifyPassword(passwordText.toCharArray(),user.getSalt(),user.getPassword());
+
+                    if(isPasswordCorrect){
+
+                        SharedPreferences sharedPreferences = inflateView.getContext().getSharedPreferences("user", Context.MODE_PRIVATE);
+                        SharedPreferences.Editor editor = sharedPreferences.edit();
+                        editor.putString("username",usernameText);
+                        editor.apply();
+
+                        FancyToast.makeText(inflateView.getContext(),"Sign In Successful",FancyToast.LENGTH_LONG,FancyToast.SUCCESS,false).show();
+                        realm.close();
+                        Intent intent = new Intent(inflateView.getContext(), MainActivity.class);
+                        startActivity(intent);
+                        requireActivity().finish();
+
+                    }else{
+                        FancyToast.makeText(inflateView.getContext(),"Invalid Username or Password",FancyToast.LENGTH_LONG,FancyToast.ERROR,false).show();
+                        realm.close();
+                        return;
+                    }
+
 
                 }
             }
