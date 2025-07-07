@@ -3,7 +3,10 @@ package com.sasadev.todo.adapter;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -14,12 +17,16 @@ import com.sasadev.todo.models.TodoItem;
 
 import java.util.ArrayList;
 
+import io.realm.Realm;
+
 public class TodoItemAdapter extends RecyclerView.Adapter<TodoItemAdapter.TodoItemViewHolder> {
 
     private ArrayList<TodoItem> todoItemsList;
+    private Realm realm;
 
     public TodoItemAdapter(ArrayList<TodoItem> todoItemsList) {
         this.todoItemsList = todoItemsList;
+        this.realm = Realm.getDefaultInstance();
     }
 
     @NonNull
@@ -36,11 +43,46 @@ public class TodoItemAdapter extends RecyclerView.Adapter<TodoItemAdapter.TodoIt
         holder.itemDescription.setText(item.getDescription());
         holder.itemDate.setText(item.getDate());
         holder.itemTag.setText(item.getTag());
+
         holder.itemStatus.setChecked(item.isStatus());
 
-        if(item.isStatus()){
-            holder.itemTitle.setPaintFlags(holder.itemTitle.getPaintFlags() | android.graphics.Paint.STRIKE_THRU_TEXT_FLAG);
-            holder.itemDescription.setPaintFlags(holder.itemDescription.getPaintFlags() | android.graphics.Paint.STRIKE_THRU_TEXT_FLAG);
+        strikeThruLineUpdate(holder.itemTitle,holder.itemStatus.isChecked());
+        strikeThruLineUpdate(holder.itemDescription,holder.itemStatus.isChecked());
+
+        holder.itemStatus.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
+
+                realm.executeTransaction(new Realm.Transaction() {
+                    @Override
+                    public void execute(Realm realm) {
+                        TodoItem resultItem = realm.where(TodoItem.class).equalTo("id",item.getId()).findFirst();
+
+                        if(resultItem != null){
+                            resultItem.setStatus(isChecked);
+                        }
+                    }
+                });
+
+                item.setStatus(isChecked);
+
+                strikeThruLineUpdate(holder.itemTitle,isChecked);
+                strikeThruLineUpdate(holder.itemDescription,isChecked);
+
+                Animation shake = AnimationUtils.loadAnimation(holder.itemView.getContext(), R.anim.shake);
+                holder.itemView.startAnimation(shake);
+
+            }
+        });
+
+    }
+
+    private void strikeThruLineUpdate(TextView textView, boolean isChecked){
+
+        if(isChecked){
+            textView.setPaintFlags(textView.getPaintFlags() | android.graphics.Paint.STRIKE_THRU_TEXT_FLAG);
+        }else{
+            textView.setPaintFlags(textView.getPaintFlags() & (~android.graphics.Paint.STRIKE_THRU_TEXT_FLAG));
         }
 
     }

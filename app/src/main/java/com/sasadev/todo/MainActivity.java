@@ -36,10 +36,12 @@ import io.realm.RealmResults;
 
 public class MainActivity extends AppCompatActivity {
 
-    private ArrayList<TodoItem> todoItems ;
+    private ArrayList<TodoItem> todoItems;
     private User loginUser;
-    String username;
-    Realm realm;
+    private String username;
+    private Realm realm;
+    private RecyclerView recyclerView;
+    private TodoItemAdapter todoItemAdapter;
 
 
     @Override
@@ -53,70 +55,29 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
 
-         realm = Realm.getDefaultInstance();
+        realm = Realm.getDefaultInstance();
 
-        SharedPreferences sharedPreferences = getSharedPreferences("user",0);
-        username =     sharedPreferences.getString("username",null);
+        SharedPreferences sharedPreferences = getSharedPreferences("user", 0);
+        username = sharedPreferences.getString("username", null);
         loginUser = realm.where(User.class).equalTo("username", username).findFirst();
 
         TextView textView = findViewById(R.id.welcomeTextView);
-        textView.setText("Hi Welcome " + username+"!");
+        textView.setText("Hi Welcome " + username + "!");
 
         loadUserTodoList();
+
+        recyclerView = findViewById(R.id.toDoItemRecyclerView);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        todoItemAdapter = new TodoItemAdapter(todoItems);
+        recyclerView.setAdapter(todoItemAdapter);
+
+        swapToDeleteItem();
 
         FloatingActionButton floatingActionButton = findViewById(R.id.floatingActionButton);
         floatingActionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
-                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-                View dialogView = getLayoutInflater().inflate(R.layout.add_item_dialog,null);
-                builder.setView(dialogView);
-
-                AlertDialog dialog = builder.create();
-                dialog.show();
-
-                TextView cancelButton = dialogView.findViewById(R.id.cancelButton);
-                cancelButton.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        dialog.dismiss();
-                        }
-                });
-
-                Button button = dialogView.findViewById(R.id.addButton);
-                button.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-
-                        EditText titleEditTextView = dialogView.findViewById(R.id.toDoTitleEditText);
-                        EditText descriptionEditTextView = dialogView.findViewById(R.id.toDoDescriptionEditText);
-                        EditText tagTexEdittView = dialogView.findViewById(R.id.toDoTagEditText);
-
-                        realm.executeTransaction(new Realm.Transaction() {
-                            @Override
-                            public void execute(Realm realm) {
-                                TodoItem newTodoItem = realm.createObject(TodoItem.class);
-                                newTodoItem.setId(todoItems.size());
-                                newTodoItem.setTitle(titleEditTextView.getText().toString());
-                                newTodoItem.setDescription(descriptionEditTextView.getText().toString());
-                                newTodoItem.setDate(tagTexEdittView.getText().toString());
-                                newTodoItem.setTag(tagTexEdittView.getText().toString());
-                                newTodoItem.setStatus(false);
-
-                                loginUser.getTodoItems().add(newTodoItem);
-                                dialog.dismiss();
-                                FancyToast.makeText(MainActivity.this,"Task Added Successful!",FancyToast.LENGTH_LONG,FancyToast.SUCCESS,false).show();
-                            }
-                        });
-
-                        loadUserTodoList();
-
-                    }
-                });
-
-
-
+                showAddTodoItemDialog();
             }
         });
 
@@ -132,64 +93,103 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void loadUserTodoList(){
+    private void loadUserTodoList() {
 
-        if(loginUser == null){
+        if (loginUser == null) {
             todoItems = new ArrayList<>();
-        }else{
+        } else {
             todoItems = new ArrayList<>(
                     realm.copyFromRealm(loginUser.getTodoItems()));
-
         }
 
-        if(todoItems.isEmpty()){
+        if (todoItems.isEmpty()) {
             LinearLayout linearLayout = findViewById(R.id.emptyStateLayout);
             linearLayout.setVisibility(View.VISIBLE);
             return;
         }
 
-        RecyclerView recyclerView = findViewById(R.id.toDoItemRecyclerView);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        recyclerView.setAdapter(new TodoItemAdapter(todoItems));
+    }
 
-        ItemTouchHelper.SimpleCallback simpleCallback = new ItemTouchHelper.SimpleCallback(0,ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
+    private void swapToDeleteItem(){
+        ItemTouchHelper.SimpleCallback simpleCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
             @Override
             public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
                 return false;
             }
+
             @Override
             public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
                 int position = viewHolder.getAdapterPosition();
+                TodoItem deleteItem = todoItems.get(position);
+
+                realm.executeTransaction(new Realm.Transaction() {
+                    @Override
+                    public void execute(Realm realm) {
+                        TodoItem item = realm.where(TodoItem.class).equalTo("id",deleteItem.getId()).findFirst();
+
+                        if(item != null){
+                            item.deleteFromRealm();
+                        }
+                    }
+                });
+
                 todoItems.remove(position);
-                recyclerView.getAdapter().notifyItemChanged(position);
+                todoItemAdapter.notifyItemChanged(position);
+                FancyToast.makeText(MainActivity.this,"Task Deleted!",FancyToast.LENGTH_LONG,FancyToast.SUCCESS,false).show();
+                loadUserTodoList();
 
             }
         };
 
         ItemTouchHelper itemTouchHelper = new ItemTouchHelper(simpleCallback);
         itemTouchHelper.attachToRecyclerView(recyclerView);
-
-        // Open a Realm instance
-        Realm.init(MainActivity.this);
-        Realm realm = Realm.getDefaultInstance();
-
-        try {
-            // Query all User objects
-            RealmResults<User> realmResults = realm.where(User.class).findAll();
-
-            // Log usernames
-            for (User user : realmResults) {
-                Log.i("Sasa", "Username: " + user.getUsername());
-            }
-        } finally {
-            // Always close Realm in finally block to prevent memory leaks
-            realm.close();
-        }
-
     }
 
-    private void addTodoItem(TodoItem todoItem){
+    private void showAddTodoItemDialog() {
 
+        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+        View dialogView = getLayoutInflater().inflate(R.layout.add_item_dialog, null);
+        builder.setView(dialogView);
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+
+        TextView cancelButton = dialogView.findViewById(R.id.cancelButton);
+        cancelButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                dialog.dismiss();
+            }
+        });
+
+        Button button = dialogView.findViewById(R.id.addButton);
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                EditText titleEditTextView = dialogView.findViewById(R.id.toDoTitleEditText);
+                EditText descriptionEditTextView = dialogView.findViewById(R.id.toDoDescriptionEditText);
+                EditText tagTexEdittView = dialogView.findViewById(R.id.toDoTagEditText);
+
+                realm.executeTransaction(new Realm.Transaction() {
+                    @Override
+                    public void execute(Realm realm) {
+                        TodoItem newTodoItem = realm.createObject(TodoItem.class, todoItems.size());
+                        newTodoItem.setTitle(titleEditTextView.getText().toString());
+                        newTodoItem.setDescription(descriptionEditTextView.getText().toString());
+                        newTodoItem.setDate(tagTexEdittView.getText().toString());
+                        newTodoItem.setTag(tagTexEdittView.getText().toString());
+                        newTodoItem.setStatus(false);
+
+                        loginUser.getTodoItems().add(newTodoItem);
+                        dialog.dismiss();
+                        FancyToast.makeText(MainActivity.this, "Task Added Successful!", FancyToast.LENGTH_LONG, FancyToast.SUCCESS, false).show();
+                        recreate();
+                    }
+                });
+            }
+        });
+
+        loadUserTodoList();
     }
 
 }

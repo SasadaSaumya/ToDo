@@ -103,6 +103,12 @@ public class SignupFragment extends Fragment {
                     return;
                 }else{
 
+                    RealmResults<User> user = realm.where(User.class).equalTo("username",usernameText).findAll();
+                    if(user != null){
+                        FancyToast.makeText(inflateView.getContext(),"Username Already exist",FancyToast.LENGTH_LONG,FancyToast.ERROR,false).show();
+                        return;
+                    }
+
                     try {
                         //password hashing
                         char[] passwordChar = passwordText.toCharArray();
