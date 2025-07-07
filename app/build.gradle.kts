@@ -33,6 +33,8 @@ android {
 
 }
 
+apply(plugin = "realm-android")
+
 dependencies {
 
     implementation(libs.appcompat)
@@ -45,4 +47,8 @@ dependencies {
 
     //nav
     implementation ("com.github.ismaeldivita:chip-navigation-bar:1.4.0")
+
+    //FancyToast
+    implementation ("io.github.shashank02051997:FancyToast:2.0.2")
+
 }

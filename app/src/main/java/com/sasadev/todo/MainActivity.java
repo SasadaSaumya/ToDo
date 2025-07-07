@@ -1,8 +1,11 @@
 package com.sasadev.todo;
 
 import android.app.AlertDialog;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
+import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
@@ -18,8 +21,12 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.sasadev.todo.adapter.TodoItemAdapter;
 import com.sasadev.todo.models.TodoItem;
+import com.sasadev.todo.models.User;
 
 import java.util.ArrayList;
+
+import io.realm.Realm;
+import io.realm.RealmResults;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -37,6 +44,15 @@ public class MainActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+
+        SharedPreferences sharedPreferences = getSharedPreferences("user",0);
+        String username =     sharedPreferences.getString("username",null);
+
+        TextView textView = findViewById(R.id.welcomeTextView);
+        textView.setText(R.string.welcomeText + username+"!");
+
+        //get all users data from realm
+
 
         todoItems = new ArrayList<>();
 

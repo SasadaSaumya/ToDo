@@ -13,6 +13,9 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import io.realm.Realm;
+import io.realm.RealmConfiguration;
+
 public class LauncherActivity extends AppCompatActivity {
 
     @Override
@@ -25,6 +28,10 @@ public class LauncherActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+
+        Realm.init(this);
+        RealmConfiguration realmConfiguration = new RealmConfiguration.Builder().allowWritesOnUiThread(true).build();
+        Realm.setDefaultConfiguration(realmConfiguration);
 
 
         Animation animation = AnimationUtils.loadAnimation(this,R.anim.splash_anim);
@@ -40,7 +47,7 @@ public class LauncherActivity extends AppCompatActivity {
 
             @Override
             public void onAnimationEnd(Animation animation) {
-                Intent intent = new Intent(LauncherActivity.this, MainActivity.class);
+                Intent intent = new Intent(LauncherActivity.this, AuthActivity.class);
 
                 Log.i("Sasa","onAnimationEnd");
                 startActivity(intent);
