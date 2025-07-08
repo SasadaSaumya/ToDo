@@ -1,6 +1,7 @@
 package com.sasadev.todo;
 
 import android.app.AlertDialog;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
@@ -29,6 +30,7 @@ import com.sasadev.todo.utils.AuthUtils;
 import com.shashank.sony.fancytoastlib.FancyToast;
 
 import java.util.ArrayList;
+import java.util.UUID;
 
 import io.realm.Realm;
 import io.realm.RealmResults;
@@ -68,8 +70,7 @@ public class MainActivity extends AppCompatActivity {
 
         recyclerView = findViewById(R.id.toDoItemRecyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        todoItemAdapter = new TodoItemAdapter(todoItems);
-        recyclerView.setAdapter(todoItemAdapter);
+
 
         swapToDeleteItem();
 
@@ -85,8 +86,7 @@ public class MainActivity extends AppCompatActivity {
         logoutText.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                AuthUtils.signOut(MainActivity.this);
-                finish();
+                signOut();
             }
         });
 
@@ -108,10 +108,16 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
+        todoItems.sort((o1,o2)->{
+           return Boolean.compare(o1.isStatus(), o2.isStatus());
+        });
+
+        todoItemAdapter = new TodoItemAdapter(todoItems);
+        recyclerView.setAdapter(todoItemAdapter);
     }
 
     private void swapToDeleteItem(){
-        ItemTouchHelper.SimpleCallback simpleCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
+        ItemTouchHelper.SimpleCallback simpleCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
             @Override
             public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
                 return false;
@@ -121,6 +127,7 @@ public class MainActivity extends AppCompatActivity {
             public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
                 int position = viewHolder.getAdapterPosition();
                 TodoItem deleteItem = todoItems.get(position);
+
 
                 realm.executeTransaction(new Realm.Transaction() {
                     @Override
@@ -173,7 +180,7 @@ public class MainActivity extends AppCompatActivity {
                 realm.executeTransaction(new Realm.Transaction() {
                     @Override
                     public void execute(Realm realm) {
-                        TodoItem newTodoItem = realm.createObject(TodoItem.class, todoItems.size());
+                        TodoItem newTodoItem = realm.createObject(TodoItem.class, todoItems.size() );
                         newTodoItem.setTitle(titleEditTextView.getText().toString());
                         newTodoItem.setDescription(descriptionEditTextView.getText().toString());
                         newTodoItem.setDate(tagTexEdittView.getText().toString());
@@ -192,4 +199,19 @@ public class MainActivity extends AppCompatActivity {
         loadUserTodoList();
     }
 
+    private void signOut() {
+        AuthUtils.signOut(this);
+        Intent intent = new Intent(this, AuthActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
+        finish();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (realm != null && !realm.isClosed()) {
+            realm.close();
+        }
+    }
 }

@@ -3,6 +3,9 @@
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="welcomeText">Hi Welcome </string>
+    <string name="welcomeBkText">Welcome Back! </string>
+    <string name="signin_tocontinue_text">Sign in to continue</string>
+
     <string name="welcome_des">Add your tasks and get things done.</string>
 
     <string name="tag_text">Tag</string>
@@ -10,4 +13,17 @@
     <string name="title_text">Title</string>"
     <string name="add_to_do_item_text">Add Your To-Do Item</string>
     <string name="select_your_date_text">Select Due Date</string>
+
+    <string name="username_text">Username</string>
+    <string name="password_text">Password</string>
+    <string name="mobile_text">Mobile</string>
+    <string name="signup_text">Sign Up</string>
+    <string name="signin_text">Sign In</string>
+
+    <string name="sasa_text">Sasa</string>
+    <string name="developedby_text">Developed By</string>
+
+
+    <string name="already_hv_acc">Already Have an account? Sign In</string>
+    <string name="don_hv_acc_text">Don\'t have an account? Sign Up</string>
 </resources>

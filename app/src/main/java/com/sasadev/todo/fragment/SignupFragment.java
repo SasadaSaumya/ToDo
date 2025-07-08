@@ -104,7 +104,7 @@ public class SignupFragment extends Fragment {
                 }else{
 
                     RealmResults<User> user = realm.where(User.class).equalTo("username",usernameText).findAll();
-                    if(user != null){
+                    if(!user.isEmpty()){
                         FancyToast.makeText(inflateView.getContext(),"Username Already exist",FancyToast.LENGTH_LONG,FancyToast.ERROR,false).show();
                         return;
                     }
